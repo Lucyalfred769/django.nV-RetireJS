@@ -1,49 +1,138 @@
-django.nV
-=========
+# django.nV-RetireJS  
 
-django.nV is a purposefully vulnerable Django application provided by [nVisium](https://www.nvisium.com/).
+This project demonstrates how to scan for vulnerabilities in JavaScript libraries using **RetireJS** with a vulnerable Django application. It includes setting up the project locally, performing security scans, and automating the process using GitHub Actions.
 
-### System Requirements & Setup 
+---
 
-First, make sure Python 3.4+ is installed on your machine. On OSX, this can be installed with Homebrew (eg. `brew install python3`). If you receive an error about conflicting PYTHONPATH, try updating the variable to reflect your python version.
+## Prerequisites  
 
+### Install Required Tools  
+1. **Node.js and npm**  
+    Install Node.js from the [official site](https://nodejs.org/). After installation, verify versions:
+    ```bash
+    node -v
+    npm -v
+    ```
+
+2. **RetireJS**  
+    Install RetireJS globally using npm:
+    ```bash
+    npm install -g retire
+    retire -v  # Confirm installation
+    ```
+
+---
+
+## Local Setup  
+
+### Step 1: Clone the Repository  
+Fork this repository, then clone it:
+```bash
+git clone https://github.com/Lucyalfred769/django.nV-RetireJS.git
+cd django.nV-RetireJS
 ```
-export PYTHONPATH="/usr/local/lib/python3.4/site-packages"
+
+### Step 2: Initialize Git Repository  
+If not already initialized:
+```bash
+git init
 ```
 
-Before using django.nV, you'll also need to install virtualenv. You should be able to use `pip install virtualenv`, using the pip package manager, to install it. On most systems, pip should be installed alongside python.
+### Step 3: Organize Ignored Files  
+To keep your repository clean, add commonly ignored files and folders to `.gitignore`:
+```bash
+echo "__pycache__/" >> .gitignore
+echo "node_modules/" >> .gitignore
+echo "*.log" >> .gitignore
+echo "*.json" >> .gitignore
+```
+Verify the `.gitignore` file:
+```bash
+cat .gitignore
+```
 
-To set up the repository, use `virtualenv -p python3 venv`, which will create a virtualenv using Python 3. To enter this environment, run `source venv/bin/activate`. You should see your $PS1 update to include `(venv)` to remind you that you are in the virtual environment. You can also leave the environment by simply typing `deactivate`.
+---
 
-### Installation of Dependencies
+## Security Scan  
 
-To install the dependencies, simply run `pip install -r requirements.txt`.
+### Step 1: Run RetireJS Locally  
+Perform a vulnerability scan and output results in JSON format:
+```bash
+retire --outputformat json --outputpath retirejs-report.json
+```
 
-### Database Setup
+### Step 2: Verify Scan Results  
+Ensure the `retirejs-report.json` file is generated:
+```bash
+ls
+cat retirejs-report.json
+```
 
-django.nV provides you with a script automatically creates the database as well as populates it with data. This script is titled `reset_db.sh`. django.nV does not ship with the database, so in order to run the application properly, you'll need to use this script:
+---
 
-    ./reset_db.sh
+## Automating with GitHub Actions  
+### GitHub Actions Workflow for RetireJS
+  
+Create a folder for GitHub Actions workflows:
+```bash
+mkdir -p .github/workflows
+```
 
-You can also use the same script to reset the database if you make any changes.
+Create the workflow file:
+```bash
+nano .github/workflows/retirejs-scan.yml
+```
 
-### Running the application
-To run the app in its application folder type:
+Add the following contents to automate RetireJS scans:
+```yaml
+name: RetireJS Scan
 
-    ./runapp.sh
+on:
+    push:
+        branches:
+            - main
+    pull_request:
 
-You should then be able to access the web interface at `http://localhost:8000/`.
+jobs:
+    scan:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+                uses: actions/checkout@v3
 
-### Tutorials
+            - name: Set up Node.js
+                uses: actions/setup-node@v3
+                with:
+                    node-version: '18'
 
-django.nV comes with a series of writeups for the vulnerabilities we've added to the code. Each tutorial comes with a description of the vuln, a hint to where to find it, and then the exact bug and how it could be remedied.
+            - name: Install RetireJS
+                run: npm install -g retire
 
-You can access these tutorials within the app at `http://localhost:8000/taskManager/tutorials/`, or by clicking on the 'Tutorials' link in the top-right of the web interface.
+            - name: Run RetireJS Scan
+                run: retire --outputformat json --outputpath retirejs-report.json
+```
 
-### Mail ###
+Save and exit the editor.
 
-The only mail sent by the app is for the "Forgot Password" feature. You can use the built-in Python mailserver for those messages.
+### Commit and Push Change
+Add your changes to the repository:
+```bash
+git add .
+git commit -m "Initial commit with RetireJS scanning workflow"
+git branch -M main
+git remote add origin <your-repository-url>
+git push -u origin main
+```
 
-    python -m smtpd -n -c DebuggingServer localhost:1025
+### Step 5: Trigger Workflow  
+Push any updates or open a pull request to trigger the GitHub Actions workflow. View the scan results under the **Actions** tab in your GitHub repository.
 
-If you prefer to use your own mailserver, simply add your settings to `settings.py`.
+---
+
+## Importance of Local Testing  
+Testing locally before moving to the pipeline is crucial as it helps identify and fix issues early, ensuring that the automated pipeline runs smoothly without interruptions. This practice saves time and resources by catching potential problems before they reach the CI/CD pipeline.
+
+---
+
+## Summary  
+This project integrates RetireJS into a DevSecOps workflow for detecting vulnerabilities in JavaScript libraries. It starts with local scans, organizes outputs, and automates scans through GitHub Actions, ensuring security throughout the development lifecycle.
