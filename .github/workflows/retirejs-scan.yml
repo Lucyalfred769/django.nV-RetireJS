@@ -1,0 +1,44 @@
+name:  Security Scan on Django Project
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  oast-frontend:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+
+      - name: Run RetireJS
+        run: |
+          docker run --rm \
+          -v ${{ github.workspace }}:/src \
+          -w /src \
+          hysnsec/retire \
+          --outputformat json \
+          --outputpath retirejs-report.json \
+          --severity high
+        continue-on-error: true
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: RetireJS-Report
+          path: retirejs-report.json
+        if: always()
