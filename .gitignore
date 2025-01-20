@@ -64,3 +64,7 @@ db.sqlite3
 
 # Uploaded files
  uploads/
+__pycache__/
+node_modules/
+*.log
+*.json
